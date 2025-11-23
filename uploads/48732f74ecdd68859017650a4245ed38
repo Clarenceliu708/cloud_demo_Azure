@@ -1,0 +1,20 @@
+{
+  "name": "demo",
+  "description": "Use of Passport in Node.js",
+  "author": "Cloud381 Instructor",
+  "version": "0.0.1",
+  "dependencies": {
+    "ejs": "*",
+    "express": "^5.1.0",
+    "express-session": "*",
+    "mongodb": "^6.21.0",
+    "mongoose": "^8.20.0",
+    "multer": "^2.0.2",
+    "passport": "*",
+    "passport-facebook": "*"
+  },
+  "engine": "*",
+  "scripts": {
+    "start": "node server"
+  }
+}

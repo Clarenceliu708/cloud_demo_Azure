@@ -1,0 +1,28 @@
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const url = 'mongodb+srv://linyimin:LYm081010.@linyimin.srwmzkx.mongodb.net/?appName=linyimin';  
+const client = new MongoClient(url);
+const dbName = 'sample_restaurants';
+const collectionName = 'restaurants';
+
+// complete this function
+const findRestaurants = async (db) => { 
+  var collection = db.collection(collectionName);
+  let results = await collection.find(
+   { cuisine: { $in: ["Italian", "American"] } },
+   { projection: { name: 1, borough: 1, _id: 0 } }
+   ).limit(10).toArray();
+  console.log(results);
+  return results;
+}
+
+async function main() {
+    await client.connect();	
+    console.log("You successfully connected to MongoDB in Task 1!");
+    const db = client.db(dbName);
+    await findRestaurants(db);
+}
+
+main()
+  .then(console.log("Task 1 marking"))
+  .catch(console.error)
+  .finally(() => client.close());

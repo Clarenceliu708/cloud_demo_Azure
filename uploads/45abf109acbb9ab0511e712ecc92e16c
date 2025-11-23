@@ -1,0 +1,132 @@
+var express             = require('express'),
+    app                 = express(),
+    session             = require('express-session'),
+    passport            = require('passport'),
+    FacebookStrategy    = require('passport-facebook').Strategy,
+    mongoose = require('mongoose'),
+    multer = require('multer'),
+    path = require('path'),
+    Note = require('./models/Node');
+app.set('view engine', 'ejs');
+app.use(express.urlencoded({extended: true}))
+app.use(express.static('public'));
+
+const upload = multer({dest: 'uploads/'});
+
+mongoose.connect("mongodb+srv://linyimin:LYm081010.@linyimin.srwmzkx.mongodb.net/?appName=linyimin", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => console.log("MongoDB connected"))
+  .catch(err => console.error(err));
+
+var user = {};  
+passport.serializeUser(function (user, done) {done(null, user);});
+passport.deserializeUser(function (id, done) {done(null, user);});
+
+app.use(session({
+    secret: "your-secret-key",
+    resave: true,
+    saveUninitialized: true }));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+var facebookAuth = {
+'clientID' : '1371251904469115', // facebook App ID       
+'clientSecret'  : '0ae73843f7c9ca0ab6033a2cc9a64ca8', // facebook App Secret  
+'callbackURL'  :  'http://localhost:8099/auth/facebook/callback'};
+
+passport.use(new FacebookStrategy({
+ "clientID" : facebookAuth.clientID,       
+ "clientSecret" : facebookAuth.clientSecret,   
+ "callbackURL" : facebookAuth.callbackURL   
+ },  
+function (token, refreshToken, profile, done) {
+ console.log("Facebook Profile: " + JSON.stringify(profile));
+ user = {};
+ user['id'] = profile.id;
+ user['name'] = profile.displayName;
+ user['type'] = profile.provider;  // Facebook
+ console.log('user object: ' + JSON.stringify(user));
+ return done(null,user);  // put user object into session => 
+req.user
+ })); 
+
+function isLoggedIn(req, res, next) {
+    if (req.isAuthenticated())
+        return next();
+    res.redirect('/login');
+}
+
+app.get("/", isLoggedIn, function (req, res) {
+    res.send('Hello, ' + req.user.name + '!');
+});
+
+app.get("/login", function (req, res) {
+ res.send("<p>Welcome to Course Notes App!</p><a href='/auth/facebook'>login through facebook</a>");
+});
+ app.get("/auth/facebook", passport.authenticate("facebook", { scope 
+: "email" }));// send to facebook to do the authentication
+ app.get("/auth/facebook/callback",// handle the callback after facebook has authenticated the user 
+passport.authenticate("facebook", {
+ successRedirect : "/content",
+ failureRedirect : "/"
+ }));
+
+app.get("/content", isLoggedIn, function (req, res) { 
+    res.render('frontpage', {user: req.user}); });
+
+app.get("/logout", function(req, res) {
+    req.logout(function(err) {
+        if (err) { return next(err); }
+        res.redirect('/');
+    });
+});
+
+app.get("/search-page", (req, res) => {
+  res.render('search'); // 搜索页面单独路由
+});
+
+// Search notes
+app.get('/search', async (req, res) => {
+  const subjectCode = req.query.subjectCode;
+  const notes = await Note.find({ subjectCode });
+  res.render('list', { notes, subjectCode });
+});
+
+// Create notes
+app.post('/create', upload.single('file'), async (req, res) => {
+  const note = new Note({
+    subjectCode: req.body.subjectCode,
+    filename: req.file.originalname,
+    filePath: req.file.path
+  });
+  await note.save();
+  res.redirect('/search?subjectCode=' + req.body.subjectCode);
+});
+
+// Update notes
+app.post('/update/:id', upload.single('file'), async (req, res) => {
+  const note = await Note.findById(req.params.id);
+  note.filename = req.file.originalname;
+  note.filePath = req.file.path;
+  await note.save();
+  res.redirect('/search?subjectCode=' + note.subjectCode);
+});
+
+// Delete notes
+app.post('/delete/:id', async (req, res) => {
+  const note = await Note.findById(req.params.id);
+  await Note.findByIdAndDelete(req.params.id);
+  res.redirect('/search?subjectCode=' + note.subjectCode);
+});
+
+// Download notes
+app.get('/download/:id', async (req, res) => {
+  const note = await Note.findById(req.params.id);
+  res.download(path.resolve(note.filePath), note.filename);
+});
+
+app.listen(process.env.PORT || 8099);
+
+console.log("App running at localhost:8099"); 

@@ -1,0 +1,131 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const session = require('cookie-session');
+const path = require('path');
+
+const app = express();
+
+// ===== Middleware =====
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(session({
+  name: 'session',
+  keys: ['secretKey'],
+  maxAge: 24 * 60 * 60 * 1000
+}));
+
+// ===== Set EJS template =====
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// ===== MongoDB Connection =====
+mongoose.connect('mongodb://127.0.0.1:27017/courseNotesApp', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error(err));
+
+// ===== Define Models =====
+const Note = mongoose.model('Note', new mongoose.Schema({
+  title: String,
+  content: String,
+  course: String,
+  date: { type: Date, default: Date.now },
+  author: String
+}));
+
+const User = mongoose.model('User', new mongoose.Schema({
+  username: String,
+  password: String
+}));
+
+// ===== Authentication Middleware =====
+function requireLogin(req, res, next) {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+  next();
+}
+
+// ===== Routes =====
+
+// Home
+app.get('/', (req, res) => {
+  res.render('index', { message: 'Welcome to Course Notes App!' });
+});
+
+// Login Page
+app.get('/login', (req, res) => {
+  res.render('login', { message: '' });
+});
+
+// Login Action
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  const user = await User.findOne({ username, password });
+  if (user) {
+    req.session.user = user.username;
+    res.redirect('/notes');
+  } else {
+    res.render('login', { message: 'Invalid credentials' });
+  }
+});
+
+// Logout
+app.get('/logout', (req, res) => {
+  req.session = null;
+  res.redirect('/');
+});
+
+// CRUD Pages
+app.get('/notes', requireLogin, async (req, res) => {
+  const notes = await Note.find();
+  res.render('notes', { notes });
+});
+
+app.post('/notes', requireLogin, async (req, res) => {
+  const note = new Note(req.body);
+  await note.save();
+  res.redirect('/notes');
+});
+
+app.post('/notes/:id/update', requireLogin, async (req, res) => {
+  await Note.findByIdAndUpdate(req.params.id, req.body);
+  res.redirect('/notes');
+});
+
+app.post('/notes/:id/delete', requireLogin, async (req, res) => {
+  await Note.findByIdAndDelete(req.params.id);
+  res.redirect('/notes');
+});
+
+// ===== RESTful API =====
+app.get('/api/notes', async (req, res) => {
+  const notes = await Note.find();
+  res.json(notes);
+});
+
+app.post('/api/notes', async (req, res) => {
+  const note = new Note(req.body);
+  await note.save();
+  res.json(note);
+});
+
+app.put('/api/notes/:id', async (req, res) => {
+  const note = await Note.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  res.json(note);
+});
+
+app.delete('/api/notes/:id', async (req, res) => {
+  await Note.findByIdAndDelete(req.params.id);
+  res.json({ message: 'Note deleted' });
+});
+
+// ===== Start Server =====
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
+  
+
