@@ -15,6 +15,6 @@
   },
   "engine": "*",
   "scripts": {
-    "start": "node server"
+    "start": "node server.js"
   }
 }
