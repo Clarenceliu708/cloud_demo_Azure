@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>搜索笔记</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;   
+      align-items: center;      
+      font-family: Arial, sans-serif;
+      background-image: url('/image/1.jpg'); 
+      background-size: cover;
+      background-position: center;
+      transition: background-image 0.5s ease-in-out; 
+    }
+
+    body.fade {
+      animation: fadeEffect 0.8s ease-in-out;
+    }
+
+    @keyframes fadeEffect {
+      0% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    .search-container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.8); 
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 250px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="search-container">
+    <h1>Search notes</h1>
+    <form action="/search" method="get">
+      <input type="text" id="subjectCode" name="subjectCode" placeholder="Please enter the subject code" required>
+      <button type="submit">Search</button>
+    </form>
+  </div>
+
+  <script>
+    const input = document.getElementById('subjectCode');
+    input.addEventListener('input', function() {
+      if (this.value.trim() !== "") {
+        document.body.classList.add('fade');
+        document.body.style.backgroundImage = "url('/image/2.jpg')";
+      } else {
+        document.body.classList.add('fade');
+        document.body.style.backgroundImage = "url('/image/1.jpg')";
+      }
+      
+      document.body.addEventListener('animationend', () => {
+        document.body.classList.remove('fade');
+      }, { once: true });
+    });
+  </script>
+</body>
+</html>
