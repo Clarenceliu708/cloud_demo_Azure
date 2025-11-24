@@ -34,7 +34,7 @@ app.use(passport.session());
 var facebookAuth = {
 'clientID' : '1371251904469115', // facebook App ID       
 'clientSecret'  : '0ae73843f7c9ca0ab6033a2cc9a64ca8', // facebook App Secret  
-'callbackURL'  :  'http://localhost:8099/auth/facebook/callback'};
+'callbackURL'  :  'https://sample-deploy-13408067-app.azurewebsites.net/auth/facebook/callback'};
 
 passport.use(new FacebookStrategy({
  "clientID" : facebookAuth.clientID,       
