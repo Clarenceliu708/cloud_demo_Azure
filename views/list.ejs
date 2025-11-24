@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Notes Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+      height: 100vh;
+      background-image: url('/image/3.jpg'); 
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    h2 { text-align: center; margin-bottom: 20px; color: #007bff; }
+    .content { max-width: 800px; margin-left: 40px; }
+    input[type="file"], input[type="text"] {
+      padding: 6px; border: 1px solid #ccc; border-radius: 4px; margin-right: 10px;
+    }
+    button {
+      padding: 8px 16px; background-color: #007bff; color: white;
+      border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+    }
+    button:hover { background-color: #0056b3; }
+    ul { list-style: none; padding: 0; margin-top: 20px; max-width: 600px; }
+    li {
+      background: rgba(255,255,255,0.85); margin-bottom: 12px; padding: 15px;
+      border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    li a { color: #007bff; text-decoration: none; font-weight: bold; margin-right: 15px; }
+    li a:hover { text-decoration: underline; }
+    .note-actions button { margin-left: 8px; background-color: #6c757d; }
+    .note-actions button:hover { background-color: #5a6268; }
+    .note-actions .delete-btn { background-color: #dc3545; }
+    .note-actions .delete-btn:hover { background-color: #a71d2a; }
+    .back-button {
+      position: fixed; bottom: 20px; right: 20px; padding: 10px 15px;
+      background-color: #28a745; color: white; border: none; border-radius: 5px;
+      text-decoration: none; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .back-button:hover { background-color: #218838; }
+  </style>
+</head>
+<body>
+  <h2>Subject code: <span id="subjectCode"></span></h2>
+
+  <div class="content">
+    <!-- 上传新文件 -->
+    <form id="createForm" enctype="multipart/form-data">
+      <input type="text" name="subjectCode" id="subjectInput" placeholder="Subject Code" required>
+      <input type="file" name="file" required>
+      <button type="submit">Create</button>
+    </form>
+
+    <!-- 文件列表 -->
+    <ul id="notesList"></ul>
+  </div>
+
+  <a href="/search-page" class="back-button">Return search</a>
+
+  <script>
+    const subjectCode = new URLSearchParams(window.location.search).get('subjectCode');
+    document.getElementById('subjectCode').textContent = subjectCode || '';
+
+    const notesList = document.getElementById('notesList');
+    const createForm = document.getElementById('createForm');
+
+    // 加载文件列表
+    async function loadNotes() {
+      const res = await fetch(`/api/files?subjectCode=${subjectCode}`);
+      const data = await res.json();
+      notesList.innerHTML = '';
+      data.forEach(note => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <a href="/api/files/${note._id}/download">${note.filename}</a>
+          <div class="note-actions">
+            <input type="file" id="update-${note._id}">
+            <button onclick="updateNote('${note._id}')">Update</button>
+            <button class="delete-btn" onclick="deleteNote('${note._id}')">Delete</button>
+          </div>
+        `;
+        notesList.appendChild(li);
+      });
+    }
+
+    // 创建文件
+    createForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(createForm);
+      const res = await fetch('/api/files', { method: 'POST', body: formData });
+      if (res.ok) {
+        alert('File created!');
+        loadNotes();
+      }
+    });
+
+    // 更新文件
+    async function updateNote(id) {
+      const fileInput = document.getElementById(`update-${id}`);
+      if (!fileInput.files.length) return alert('Please select a file');
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      const res = await fetch(`/api/files/${id}`, { method: 'PUT', body: formData });
+      if (res.ok) {
+        alert('File updated!');
+        loadNotes();
+      }
+    }
+
+    // 删除文件
+    async function deleteNote(id) {
+      if (!confirm('Confirm deletion?')) return;
+      const res = await fetch(`/api/files/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        alert('File deleted!');
+        loadNotes();
+      }
+    }
+
+    loadNotes();
+  </script>
+</body>
+</html>

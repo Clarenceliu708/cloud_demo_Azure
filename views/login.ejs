@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <style>
+    html, body {
+      height: 100%;   /* Ensure the background covers the entire page */
+      margin: 0;      /* Remove default borders */
+    }
+
+    body {
+      background-image: url('/image/login.jpg'); 
+      background-size: cover;        /* scales proportionally to cover the entire screen */
+      background-position: center;   /* Show center */
+      background-repeat: no-repeat;  /* no repeat */
+      font-family: Arial, sans-serif;
+      color: white;
+      text-align: center;
+      display: flex;                 /* content center */
+      justify-content: center;
+      align-items: center;
+      height: 100vh;                 
+    }
+
+    .container {
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 40px;
+      border-radius: 10px;
+    }
+
+    a {
+      color: #00aced;
+      font-size: 20px;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to Course Notes App!</h1>
+    <a href="/auth/facebook">login through facebook</a>
+  </div>
+</body>
+</html>
