@@ -1,3 +1,5 @@
+console.log("App starting...");
+
 var express             = require('express'),
     app                 = express(),
     session             = require('express-session'),
