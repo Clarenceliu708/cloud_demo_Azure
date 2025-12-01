@@ -180,6 +180,8 @@ app.get('/api/files/:id/download', async (req, res) => {
   }
 });
 
-const port = (process.env.PORT || 8099);
-app.listen(port, () => {
-console.log("App running at localhost:8099/login"); });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
