@@ -1,19 +1,17 @@
-console.log("App starting...");
-const express = require('express');
-const app = express();
-const session = require('express-session');
-const passport = require('passport');
-const FacebookStrategy = require('passport-facebook').Strategy;
-const mongoose = require('mongoose');
-const multer = require('multer');
-const path = require('path');
-const Note = require('./models/Node');
-
+var express             = require('express'),
+    app                 = express(),
+    session             = require('express-session'),
+    passport            = require('passport'),
+    FacebookStrategy    = require('passport-facebook').Strategy,
+    mongoose = require('mongoose'),
+    multer = require('multer'),
+    path = require('path'),
+    Note = require('./models/Node');
 app.set('view engine', 'ejs');
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}))
 app.use(express.static('public'));
 
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({dest: 'uploads/'});
 
 mongoose.connect("mongodb+srv://linyimin:LYm081010.@linyimin.srwmzkx.mongodb.net/?appName=linyimin", {
   useNewUrlParser: true,
@@ -21,71 +19,83 @@ mongoose.connect("mongodb+srv://linyimin:LYm081010.@linyimin.srwmzkx.mongodb.net
 }).then(() => console.log("MongoDB connected"))
   .catch(err => console.error(err));
 
-let user = {};
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((id, done) => done(null, user));
+var user = {};  
+passport.serializeUser(function (user, done) {done(null, user);});
+passport.deserializeUser(function (id, done) {done(null, user);});
 
 app.use(session({
-  secret: "your-secret-key",
-  resave: true,
-  saveUninitialized: true
-}));
+    secret: "your-secret-key",
+    resave: true,
+    saveUninitialized: true }));
+
 app.use(passport.initialize());
 app.use(passport.session());
+
+
+var facebookAuth = {
+  clientID: process.env.FACEBOOK_APP_ID,
+  clientSecret: process.env.FACEBOOK_APP_SECRET,
+  callbackURL: process.env.FACEBOOK_CALLBACK_URL
+};
+
+
 
 passport.use(new FacebookStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET,
   callbackURL: process.env.FACEBOOK_CALLBACK_URL
-}, function (accessToken, refreshToken, profile, done) {
-  console.log("Facebook Profile: " + JSON.stringify(profile));
-  user = {
-    id: profile.id,
-    name: profile.displayName,
-    type: profile.provider
-  };
-  console.log('user object: ' + JSON.stringify(user));
-  return done(null, user);
+}, function(accessToken, refreshToken, profile, done) {
+  // ...
 }));
 
+function (token, refreshToken, profile, done) {
+ console.log("Facebook Profile: " + JSON.stringify(profile));
+ user = {};
+ user['id'] = profile.id;
+ user['name'] = profile.displayName;
+ user['type'] = profile.provider;  // Facebook
+ console.log('user object: ' + JSON.stringify(user));
+ return done(null,user);  // put user object into session => 
+req.user
+ })); 
+
 function isLoggedIn(req, res, next) {
-  if (req.isAuthenticated()) return next();
-  res.redirect('/login');
+    if (req.isAuthenticated())
+        return next();
+    res.redirect('/login');
 }
 
-app.get("/", isLoggedIn, (req, res) => {
-  res.send('Hello, ' + req.user.name + '!');
+app.get("/", isLoggedIn, function (req, res) {
+    res.send('Hello, ' + req.user.name + '!');
 });
 
-app.get("/login", (req, res) => {
-  res.render("login");
+app.get("/login", function (req, res) {
+ res.render("login");
 });
+app.get("/auth/facebook", passport.authenticate("facebook", { scope 
+: "email" }));// send to facebook to do the authentication
+app.get("/auth/facebook/callback",// handle the callback after facebook has authenticated the user 
+passport.authenticate("facebook", {
+ successRedirect : "/content",
+ failureRedirect : "/"
+ }));
 
-app.get("/auth/facebook", passport.authenticate("facebook", { scope: "email" }));
+app.get("/content", isLoggedIn, function (req, res) { 
+    res.render('frontpage', {user: req.user}); });
 
-app.get("/auth/facebook/callback",
-  passport.authenticate("facebook", {
-    successRedirect: "/content",
-    failureRedirect: "/"
-  })
-);
-
-app.get("/content", isLoggedIn, (req, res) => {
-  res.render('frontpage', { user: req.user });
-});
-
-app.get("/logout", (req, res) => {
-  req.logout(err => {
-    if (err) return next(err);
-    res.redirect('/');
-  });
+app.get("/logout", function(req, res) {
+    req.logout(function(err) {
+        if (err) { return next(err); }
+        res.redirect('/');
+    });
 });
 
 app.get("/search-page", (req, res) => {
-  res.render('search');
+  res.render('search'); 
 });
 
-// RESTful API: 获取所有文件
+// 获取所有文件（可选 subjectCode 过滤）
+// RESTful API：返回 JSON
 app.get('/api/files', async (req, res) => {
   try {
     const { subjectCode } = req.query;
@@ -97,7 +107,7 @@ app.get('/api/files', async (req, res) => {
   }
 });
 
-// EJS 渲染：搜索页面
+// 传统 EJS 渲染：返回 list.ejs 页面
 app.get('/search', async (req, res) => {
   try {
     const subjectCode = req.query.subjectCode;
@@ -108,14 +118,15 @@ app.get('/search', async (req, res) => {
   }
 });
 
+
 // 创建文件
 app.post('/api/files', upload.single('file'), async (req, res) => {
   try {
     const note = new Note({
       subjectCode: req.body.subjectCode,
       description: req.body.description,
-      filename: req.file?.originalname || null,
-      filePath: req.file?.path || null
+      filename: req.file ? req.file.originalname : null,
+      filePath: req.file ? req.file.path : null
     });
     await note.save();
     res.status(201).json(note);
@@ -134,9 +145,12 @@ app.put('/api/files/:id', upload.single('file'), async (req, res) => {
       note.filename = req.file.originalname;
       note.filePath = req.file.path;
     }
-    if (req.body.filename) note.filename = req.body.filename;
-    if (req.body.description) note.description = req.body.description;
-
+    if (req.body.filename) {
+      note.filename = req.body.filename;
+    }
+    if (req.body.description) {
+      note.description = req.body.description;
+    }
     await note.save();
     res.json(note);
   } catch (err) {
