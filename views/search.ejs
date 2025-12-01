@@ -61,15 +61,37 @@
       padding: 8px;
       border-radius: 4px;
     }
+
+    /* 新增 logout 样式 */
+    .logout {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+    .logout a {
+      padding: 8px 16px;
+      background-color: #dc3545;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .logout a:hover {
+      background-color: #a71d2a;
+    }
   </style>
 </head>
 <body>
+  <!-- 固定在右上角的 Logout 按钮 -->
+  <div class="logout">
+    <a href="/logout">Logout</a>
+  </div>
+
   <div class="search-container">
     <h1>Search notes</h1>
-    <form action="/search" method="get">
-  <input type="text" name="subjectCode" placeholder="Enter subject code">
-  <button type="submit">Search</button>
-</form>
+    <form id="searchForm" action="/search" method="get">
+      <input id="subjectCode" type="text" name="subjectCode" placeholder="Enter subject code">
+      <button type="submit">Search</button>
+    </form>
     <ul id="results"></ul>
   </div>
 
@@ -78,7 +100,6 @@
     const form = document.getElementById('searchForm');
     const results = document.getElementById('results');
 
-    // 背景切换效果
     input.addEventListener('input', function() {
       if (this.value.trim() !== "") {
         document.body.classList.add('fade');
@@ -92,7 +113,6 @@
       }, { once: true });
     });
 
-    // 改成调用 REST API
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const subjectCode = input.value.trim();
@@ -117,6 +137,5 @@
       }
     });
   </script>
-  
-
 </body>
+</html>
