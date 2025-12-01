@@ -55,6 +55,7 @@ passport.use(new FacebookStrategy({
 }));
 
 
+
 function isLoggedIn(req, res, next) {
     if (req.isAuthenticated())
         return next();
