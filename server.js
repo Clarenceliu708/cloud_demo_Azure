@@ -45,19 +45,15 @@ passport.use(new FacebookStrategy({
   clientSecret: process.env.FACEBOOK_APP_SECRET,
   callbackURL: process.env.FACEBOOK_CALLBACK_URL
 }, function(accessToken, refreshToken, profile, done) {
-  // ...
+  console.log("Facebook Profile: " + JSON.stringify(profile));
+  user = {};
+  user['id'] = profile.id;
+  user['name'] = profile.displayName;
+  user['type'] = profile.provider;  // Facebook
+  console.log('user object: ' + JSON.stringify(user));
+  return done(null, user);  // put user object into session => req.user
 }));
 
-function (token, refreshToken, profile, done) {
- console.log("Facebook Profile: " + JSON.stringify(profile));
- user = {};
- user['id'] = profile.id;
- user['name'] = profile.displayName;
- user['type'] = profile.provider;  // Facebook
- console.log('user object: ' + JSON.stringify(user));
- return done(null,user);  // put user object into session => 
-req.user
- })); 
 
 function isLoggedIn(req, res, next) {
     if (req.isAuthenticated())
