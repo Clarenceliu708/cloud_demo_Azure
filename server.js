@@ -31,23 +31,16 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 var facebookAuth = {
-  clientID: process.env.FACEBOOK_APP_ID,
-  clientSecret: process.env.FACEBOOK_APP_SECRET,
-  callbackURL: process.env.FACEBOOK_CALLBACK_URL
-};
-
-
+'clientID' : '1371251904469115', // facebook App ID       
+'clientSecret'  : '0ae73843f7c9ca0ab6033a2cc9a64ca8', // facebook App Secret  
+'callbackURL'  :  'https://sample-deploy-13408067-app-gpe9buhdgah2djfc.francecentral-01.azurewebsites.net/auth/facebook/callback'};
 
 passport.use(new FacebookStrategy({
-  clientID: process.env.FACEBOOK_APP_ID,
-  clientSecret: process.env.FACEBOOK_APP_SECRET,
-  callbackURL: process.env.FACEBOOK_CALLBACK_URL
-}, function(accessToken, refreshToken, profile, done) {
-  // ...
-}));
-
+ "clientID" : facebookAuth.clientID,       
+ "clientSecret" : facebookAuth.clientSecret,   
+ "callbackURL" : facebookAuth.callbackURL   
+ },  
 function (token, refreshToken, profile, done) {
  console.log("Facebook Profile: " + JSON.stringify(profile));
  user = {};
@@ -180,7 +173,6 @@ app.get('/api/files/:id/download', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const port = (process.env.PORT || 8099);
+app.listen(port, () => {
+console.log("App running at localhost:8099/login"); });
