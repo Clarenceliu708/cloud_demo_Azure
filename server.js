@@ -31,16 +31,23 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+
 var facebookAuth = {
-'clientID' : '1371251904469115', // facebook App ID       
-'clientSecret'  : '0ae73843f7c9ca0ab6033a2cc9a64ca8', // facebook App Secret  
-'callbackURL'  :  'http://localhost:8099/auth/facebook/callback'};
+  clientID: process.env.FACEBOOK_APP_ID,
+  clientSecret: process.env.FACEBOOK_APP_SECRET,
+  callbackURL: process.env.FACEBOOK_CALLBACK_URL
+};
+
+
 
 passport.use(new FacebookStrategy({
- "clientID" : facebookAuth.clientID,       
- "clientSecret" : facebookAuth.clientSecret,   
- "callbackURL" : facebookAuth.callbackURL   
- },  
+  clientID: process.env.FACEBOOK_APP_ID,
+  clientSecret: process.env.FACEBOOK_APP_SECRET,
+  callbackURL: process.env.FACEBOOK_CALLBACK_URL
+}, function(accessToken, refreshToken, profile, done) {
+  // ...
+}));
+
 function (token, refreshToken, profile, done) {
  console.log("Facebook Profile: " + JSON.stringify(profile));
  user = {};
